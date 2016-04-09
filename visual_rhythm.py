@@ -18,7 +18,7 @@ def get_visualrhythm (source, type_visualrhythm = 'horizontal', params = None, f
       #img = cv2.equalizeHist(cv2.cvtColor(img, cv2.COLOR_RGB2GRAY))
       #img = clahe.apply(cv2.cvtColor(img, cv2.COLOR_RGB2GRAY))
       #img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-      vrr = [img[gap][:][:] for gap in xrange(0, H, params[0])]
+      vrr = [img[gap, :, :] for gap in xrange(0, H, params[0])]
       vrr2 = np.empty([0, vrr[0].shape[1]], np.uint8)
       for vrrr in vrr:
         vrr2 = np.vstack ((vrr2, vrrr))
@@ -39,7 +39,7 @@ def get_visualrhythm (source, type_visualrhythm = 'horizontal', params = None, f
   if len (vr[0].shape) > 1:
     ans = np.array (vr)
   else:
-    ans = np.array (vr).reshape (len(vr), vr[0][1])
+    ans = np.array (vr).reshape (len(vr), vr[0, 1])
 
   if show:
     if len (ans.shape) > 2:
@@ -102,3 +102,21 @@ def get_zigzag (img, color, row_gap, col_gap, W, H):
 
 def get_random_walk (img, pattern_x, pattern_y):
   return img[pattern_x, pattern_y]
+
+
+def extract_horizontal_from_frame(img, (H, W), gap):
+  return np.array([img[row, :] for row in xrange(0, H, gap)], np.uint8).flatten()
+def extract_vertical_from_frame(img, (H, W), gap):
+  return np.array([img[:, col] for col in xrange(0, W, gap)], np.uint8).flatten()
+def extract_zigzag_from_frame(img, (H, W), row_gap, col_gap):
+  return np.array(visual_rhythm.get_zigzag(frame, False, row_gap, col_gap, W, H)).flatten()
+
+def extract_from_frame(frame, type_visualrhythm, size, params):
+  if type_visualrhythm[0] == 'h': #horizontal
+    return (extract_horizontal_from_frame(frame, size, params[0]))
+  elif type_visualrhythm[0] == 'v': #vertical
+    return (extract_vertical_from_frame(frame, size, params[0]))
+  elif type_visualrhythm[0] == 'z': #zigzag
+    return (extract_zigzag_from_frame(frame, size, params[0], params[1]))
+  return None
+
