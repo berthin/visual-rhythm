@@ -29,7 +29,14 @@ def get_visualrhythm (source, type_visualrhythm = 'horizontal', params = None, f
     obj.set (1, frame_range[0])
     for idx in xrange(frame_range[1]-frame_range[0]):
       _, img = obj.read()
-      vr.append (img[:, params[0], :]);
+      #vr.append (img[:, params[0], :]);
+      vrr = [img[:, gap, :] for gap in xrange(0, W, params[0])]
+      vrr2 = np.empty([0, vrr[0].shape[1]], np.uint8)
+      for vrrr in vrr:
+        vrr2 = np.vstack ((vrr2, vrrr))
+      vrr2 = np.array(vrr2)
+      #vr.append (img[params[0]][:][:]);
+      vr.append (vrr2)
   elif type_visualrhythm == 'zigzag':
     obj.set (1, frame_range[0])
     for idx in xrange(frame_range[1]-frame_range[0]):
@@ -102,6 +109,38 @@ def get_zigzag (img, color, row_gap, col_gap, W, H):
 
 def get_random_walk (img, pattern_x, pattern_y):
   return img[pattern_x, pattern_y]
+
+class stuple(tuple):
+    def __add__ (self, other):
+        return self.__class__(map(lambda x, y: x + y, self, other))
+    def first (self):
+        return self[0]
+    def second (self):
+        return self[1]
+
+def get_circular_path (img, (gapR, gapC)):
+    R, C = img.shape
+    path = []
+    pos = stuple(0, 0)
+    k = 0
+    while k < max(C / gapC, R / gapR) / 2:
+        if k > 0:
+            for i in xrange((k - 1) * gapC, k * gapC):
+                pos += stuple(0, 1)
+                path.append(pos)
+        for i in xrange(k * gapC, C - k * gapC):
+            pos += stuple(0, 1)
+            path.append(pos)
+        for i in xrange(k * gapR, R - k * gapR):
+            pos += stuple(1, 0)
+            path.append(pos)
+        for i in xrange(C - k * gapC, k * gapC, -1):
+            pos += stuple(0, -1)
+            path.append(pos)
+        for i in xrange(R - k * gapR, (k + 1) * gapR):
+            pos += stuple(-1, 0)
+            path.append(pos)
+        k += 1
 
 
 def extract_horizontal_from_frame(img, (H, W), gap):
